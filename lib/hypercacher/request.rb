@@ -1,61 +1,71 @@
 class Hypercacher
-  class Request
+  class RequestWrapper
+
+    def self.new(requestlike)
+      # Detect what real wrapper to use, but not if we're in one of our subclasses
+      if self != RequestWrapper
+        super
+      else
+        case requestlike
+        when Rack::Request
+          RackRequestWrapper.new(requestlike)
+        when Hash
+          if requestlike.has_key? 'rack.version'
+            RackEnvWrapper.new(requestlike)
+          end
+        else
+          raise Hypercacher::UnsupportedAdapter, "Don't know how to wrap #{requestlike.inspect}"
+        end
+      end
+    end
 
     CACHEABLE_METHODS = %w[GET HEAD]
 
-    def initialize(*args)
-      if args.last.is_a?(Hash)
-        @request_hash = args.pop.dup
-      end
+    attr_reader :request
 
+    def initialize(requestlike)
+      @request = requestlike
     end
 
-    # HTTP Request method
-    # @ return [String] the HTTP request method, all caps
-    def method
-      @method ||=
-        begin
-          if @request_hash
-            @request_hash[:method].to_s.upcase
-          end
-        end
+    def original_request
+      @request
     end
 
-    # HTTP Request header, as an nice-to-use object
-    # @return [Hypercacher::Headers]
-    def header
-      @header ||= Header.new(
-        if @request_hash
-          @request_hash[:headers]
-        end
-      )
-    end
-
-    # HTTP Request URI
-    # @return [String] the uri
     def uri
-      @uri ||=
-        begin
-          if @request_hash
-            @request_hash[:uri]
-          end
-        end
+      raise "please implement #uri for #{self.class}"
     end
 
     def cacheable?
-      cacheable_method? &&
-        ! header.cache_control?.no_store? &&
-        ! header.pragma?.no_cache?
+      cacheable_method? # &&
+        # ! header.cache_control?.no_store? &&
+        # ! header.pragma?.no_cache?
     end
-
-
-    protected
 
     def cacheable_method?
       CACHEABLE_METHODS.include? method
     end
 
+    class RackRequestWrapper < RequestWrapper
 
+      def uri
+        [request.scheme, '://', request.host_with_port, request.path_info].join
+
+      end
+    end
+
+    class RackEnvWrapper < RackRequestWrapper
+
+      def initialize(env)
+        @original_request = env
+        @request = Rack::Request.new(env)
+      end
+
+      def original_request
+        @original_request
+      end
+
+
+    end
   end
 end
 

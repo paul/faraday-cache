@@ -51,4 +51,9 @@ Resourceful includes support for Hypercacher out of the box.
       response = cached_response
     end
 
+### Faraday
+
+    conn = Faraday.new do |conn|
+      conn.request :hypercacher
+    end
 

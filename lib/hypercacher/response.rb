@@ -1,31 +1,64 @@
-class Hypercacher
-  class Response
+require 'time'
 
-    def initialize(*args)
-      if args.last.is_a?(Hash)
-        @response_hash = args.pop.dup
+class Hypercacher
+  class ResponseWrapper
+
+    def self.new(responselike)
+      # Detect what real wrapper to use, but not if we're in one of our subclasses
+      if self != ResponseWrapper
+        super
+      else
+        case responselike
+        when Rack::MockResponse
+          RackMockResponseWrapper.new(responselike)
+        else
+          raise Hypercacher::UnsupportedAdapter, "Don't know how to wrap #{responselike.inspect}"
+        end
       end
     end
 
-    def status
-      @status ||=
-        begin
-          if @response_hash
-            @response_hash[:status]
-          end
-        end
+    def initialize(responselike)
+      @response = @original_response = responselike
     end
 
-    def header
-      @header ||= Header.new(
-        if @response_hash
-          @response_hash[:headers]
-        end
-      )
+    def response
+      @response
+    end
+
+    def fresh?(at = Time.now)
+      if header.has_key?("Expires")
+        Time.httpdate(header["Expires"]) > at
+      else
+        true
+      end
+    end
+
+    def stale?(at = Time.now)
+      !fresh?(at)
     end
 
     def successful?
       (200..299).include? status
+    end
+
+    def cacheable?
+      true
+    end
+
+    def needs_revalidation?
+      stale?
+    end
+
+    def valid?
+      !needs_revalidation?
+    end
+
+    class RackMockResponseWrapper < ResponseWrapper
+
+      def header
+        response.header
+      end
+
     end
 
   end
