@@ -16,10 +16,6 @@ module AppHelpers
         @request_counts = nil
       end
 
-      def self.total_requests
-        request_counts.values.inject(&:+)
-      end
-
       after do
         self.class.request_counts[request.path_info] += 1
       end
@@ -36,6 +32,27 @@ module AppHelpers
 
   def app
     self.class.app
+  end
+
+  RSpec::Matchers.define(:have_received) do |count|
+    chain(:request)  { @suffix = "request"  }
+    chain(:requests) { @suffix = "requests" }
+
+    description do
+      "have received #{count} #{@suffix}"
+    end
+
+    def actual_requests
+      app.request_counts.values.inject(&:+)
+    end
+
+    match do
+      actual_requests == count
+    end
+
+    failure_message_for_should do
+      "expected #{count} #{@suffix}, but received #{actual_requests}"
+    end
   end
 
 end

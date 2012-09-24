@@ -26,7 +26,6 @@ module FaradayHelpers
   end
 
   def response
-    p "#response"
     @last_response ||= make_request
   end
 

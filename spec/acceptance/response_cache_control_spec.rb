@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Hypercacher, "response Cache-Control header" do
 
-  context "is missing" do
+  context "is not present" do
 
     app do
       get "/cache-control/none" do
@@ -34,7 +34,7 @@ describe Hypercacher, "response Cache-Control header" do
 
       describe "the remote server" do
         subject { app }
-        its(:request_counts) { should have(1).request }
+        it { should have_received(1).request }
       end
 
     end
