@@ -9,6 +9,8 @@ module CacheHelpers
 
     cached_response = @cache.fetch(env)
 
+    p cached_response
+    p cached_response.stale? if cached_response
     if cached_response.nil? || cached_response.stale?
       process_request(uri, env, &block)
     else

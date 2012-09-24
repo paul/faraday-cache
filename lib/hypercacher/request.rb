@@ -1,38 +1,24 @@
 class Hypercacher
-  class RequestWrapper
+  class Request < Faraday::Request
 
-    def self.new(requestlike)
-      # Detect what real wrapper to use, but not if we're in one of our subclasses
-      if self != RequestWrapper
-        super
-      else
-        case requestlike
-        when Rack::Request
-          RackRequestWrapper.new(requestlike)
-        when Hash
-          if requestlike.has_key? 'rack.version'
-            RackEnvWrapper.new(requestlike)
-          end
-        else
-          raise Hypercacher::UnsupportedAdapter, "Don't know how to wrap #{requestlike.inspect}"
-        end
-      end
-    end
-
-    CACHEABLE_METHODS = %w[GET HEAD]
+    CACHEABLE_METHODS = [:get, :head]
 
     attr_reader :request
 
-    def initialize(requestlike)
-      @request = requestlike
+    def self.from_env(env)
+      new(env,
+          env[:method],
+          env[:url].to_s,
+          env[:params],
+          env[:request_headers],
+          env[:body],
+          env[:request]
+         )
     end
 
-    def original_request
-      @request
-    end
-
-    def uri
-      raise "please implement #uri for #{self.class}"
+    def initialize(*a)
+      @original_env = a.shift
+      super(*a)
     end
 
     def cacheable?
@@ -45,27 +31,10 @@ class Hypercacher
       CACHEABLE_METHODS.include? method
     end
 
-    class RackRequestWrapper < RequestWrapper
-
-      def uri
-        [request.scheme, '://', request.host_with_port, request.path_info].join
-
-      end
+    def to_env
+      @original_env.merge(:request_headers => headers)
     end
 
-    class RackEnvWrapper < RackRequestWrapper
-
-      def initialize(env)
-        @original_request = env
-        @request = Rack::Request.new(env)
-      end
-
-      def original_request
-        @original_request
-      end
-
-
-    end
   end
 end
 

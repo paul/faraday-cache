@@ -14,9 +14,12 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "hypercacher"
 
+  s.add_dependency "faraday"
+
   s.add_development_dependency "rspec", ">=2.11.0"
   s.add_development_dependency "autotest"
   s.add_development_dependency "turnip"
+  s.add_development_dependency "delorean"
   s.add_development_dependency "sinatra"
   s.add_development_dependency "rack-test"
   s.add_development_dependency "awesome_print"

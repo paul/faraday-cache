@@ -14,11 +14,16 @@ class Hypercacher
     end
 
     def store(request, response)
-      @data_store[request.uri] = response
+      @data_store[request.path] = response.env
     end
 
     def fetch(request)
-      @data_store[request.uri]
+      resp = @data_store[request.path]
+      if resp
+        CachedResponse.new(resp)
+      else
+        nil
+      end
     end
 
     class CacheCollection

@@ -1,40 +1,66 @@
 require 'time'
 
 class Hypercacher
-  class ResponseWrapper
+  module Response
+    # Monkeypatch Faraday::Response with caching utility methods
+    Faraday::Response.send(:include, self)
 
-    def self.new(responselike)
-      # Detect what real wrapper to use, but not if we're in one of our subclasses
-      if self != ResponseWrapper
-        super
+    attr_reader :response_time
+
+    def initialize(env = nil)
+      @response_time = Time.now
+      super
+    end
+
+    def response_time
+      @response_time || Time.now
+    end
+
+    def request_time
+      env["request_time"] || Time.now
+    end
+
+    def expired?(at = Time.now)
+      [
+        current_age > cache_control_max_age,
+        at > expires
+      ].any?
+    end
+
+    def stale?
+      expired?
+    end
+
+    def authoritative?
+      # Responses coming from Faraday are always authoritative
+      true
+    end
+
+    # Algorithm directly from RFC2616#13.2.3
+    def current_age(at = Time.now)
+      age_value = headers['age'].to_i
+      date_value = headers['Date'] ? Time.httpdate(headers['Date']) : Time.at(0)
+      now = at
+
+      apparent_age = [0, response_time - date_value].max
+      corrected_received_age = [apparent_age, age_value].max
+      current_age = corrected_received_age + (response_time - request_time) + (now - response_time)
+    end
+
+    def cache_control_max_age
+      if headers['Cache-Control']
+        headers['Cache-Control'][/max-age=(\d+)/][0].to_i
       else
-        case responselike
-        when Rack::MockResponse
-          RackMockResponseWrapper.new(responselike)
-        else
-          raise Hypercacher::UnsupportedAdapter, "Don't know how to wrap #{responselike.inspect}"
-        end
+        0
       end
     end
 
-    def initialize(responselike)
-      @response = @original_response = responselike
-    end
-
-    def response
-      @response
-    end
-
-    def fresh?(at = Time.now)
-      if header.has_key?("Expires")
-        Time.httpdate(header["Expires"]) > at
+    def expires
+      if headers['Expires']
+        Time.httpdate(headers['Expires'])
       else
-        true
+        Time.now
       end
-    end
-
-    def stale?(at = Time.now)
-      !fresh?(at)
     end
 
     def successful?
@@ -53,14 +79,15 @@ class Hypercacher
       !needs_revalidation?
     end
 
-    class RackMockResponseWrapper < ResponseWrapper
+  end
 
-      def header
-        response.header
-      end
+  class CachedResponse < Faraday::Response
 
+    def authoritative?
+      # Responses from the cache are never authoritative
+      false
     end
-
   end
 end
+
 
