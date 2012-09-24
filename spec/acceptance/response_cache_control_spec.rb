@@ -31,6 +31,12 @@ describe Hypercacher, "response Cache-Control header" do
 
       it { should be_ok }
       it { should_not be_authoritative }
+
+      describe "the remote server" do
+        subject { app }
+        its(:request_counts) { should have(1).request }
+      end
+
     end
 
   end

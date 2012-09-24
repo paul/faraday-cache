@@ -21,10 +21,9 @@ class Hypercacher
     end
 
     def expired?(at = Time.now)
-      [
-        current_age > cache_control_max_age,
-        at > expires
-      ].any?
+      return true if cache_control_max_age && current_age > cache_control_max_age
+      return true if expires && at > expires
+      false
     end
 
     def stale?
@@ -48,10 +47,10 @@ class Hypercacher
     end
 
     def cache_control_max_age
-      if headers['Cache-Control']
-        headers['Cache-Control'][/max-age=(\d+)/][0].to_i
+      if cache_control
+        cache_control[/max-age=(\d+)/].first.to_i
       else
-        0
+        nil
       end
     end
 
@@ -59,7 +58,7 @@ class Hypercacher
       if headers['Expires']
         Time.httpdate(headers['Expires'])
       else
-        Time.now
+        nil
       end
     end
 
@@ -77,6 +76,10 @@ class Hypercacher
 
     def valid?
       !needs_revalidation?
+    end
+
+    def cache_control # TODO replace this with a smart object
+      headers['Cache-Control']
     end
 
   end

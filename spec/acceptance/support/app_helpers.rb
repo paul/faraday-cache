@@ -8,16 +8,20 @@ module AppHelpers
 
       #use Rack::CommonLogger, STDOUT
 
-      def self.response_counts
-        @response_counts ||= Hash.new { |hsh,k| hsh[k] = 0 }
+      def self.request_counts
+        @request_counts ||= Hash.new { |hsh,k| hsh[k] = 0 }
       end
 
       def self.reset_counts!
-        @response_counts = nil
+        @request_counts = nil
+      end
+
+      def self.total_requests
+        request_counts.values.inject(&:+)
       end
 
       after do
-        self.class.response_counts[request.path_info] += 1
+        self.class.request_counts[request.path_info] += 1
       end
 
     end
