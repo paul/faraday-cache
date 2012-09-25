@@ -8,6 +8,10 @@ module AppHelpers
 
       #use Rack::CommonLogger, STDOUT
 
+      before do
+        response['Date'] = Time.now.httpdate
+      end
+
       def self.request_counts
         @request_counts ||= Hash.new { |hsh,k| hsh[k] = 0 }
       end

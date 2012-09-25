@@ -27,7 +27,7 @@ class Hypercacher
     end
 
     def stale?
-      expired?
+      needs_revalidation? || expired?
     end
 
     def authoritative?
@@ -47,8 +47,8 @@ class Hypercacher
     end
 
     def cache_control_max_age
-      if cache_control
-        cache_control[/max-age=(\d+)/].first.to_i
+      if cache_control && cache_control =~ /max-age/
+        cache_control[/max-age=(\d+)/, 1].to_i
       else
         nil
       end
@@ -67,11 +67,12 @@ class Hypercacher
     end
 
     def cacheable?
+      return false if cache_control =~ /no-cache/
       true
     end
 
     def needs_revalidation?
-      stale?
+      cache_control =~ /must-revalidate/
     end
 
     def valid?

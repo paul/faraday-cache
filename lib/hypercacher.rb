@@ -15,7 +15,7 @@ class Hypercacher
   end
 
   def store(request, response)
-    backend.store(request, response)
+    backend.store(request, response) if response.cacheable?
   end
 
   def fetch(request)
