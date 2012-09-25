@@ -19,7 +19,7 @@ module FaradayHelpers
     end
 
     def get(*args)
-      conn.get(*args)
+      @last_response = conn.get(*args)
     end
 
     def response
