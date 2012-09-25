@@ -2,48 +2,6 @@ require 'spec_helper'
 
 describe Hypercacher, "with a Cache-Control header" do
 
-  shared_examples_for "a cacheable response" do
-    describe "the first request"  do
-      before { make_request }
-
-      it { should be_ok }
-      it { should be_authoritative }
-    end
-
-    describe "the second request" do
-      before do
-        2.times { make_request }
-      end
-
-      it { should be_ok }
-      it { should_not be_authoritative }
-
-      describe "the remote server" do
-        subject { app }
-        it { should have_received(1).request }
-      end
-    end
-  end
-
-  shared_examples_for "a response that needs revalidation" do
-
-    describe "the second request" do
-      before do
-        2.times { make_request }
-      end
-
-      it { should be_ok }
-      it { should be_authoritative }
-
-      describe "the remote server" do
-        subject { app }
-        it { should have_received(2).requests }
-      end
-    end
-  end
-
-  subject { response }
-
   context "not present" do
     app do
       get "/cache-control/none" do
@@ -52,9 +10,11 @@ describe Hypercacher, "with a Cache-Control header" do
       end
     end
 
-    request { get "/cache-control/none" }
+    before do
+      2.times { get "/cache-control/none" }
+    end
 
-    it_behaves_like "a cacheable response"
+    it_behaves_like "second response served from cache"
 
   end
 
@@ -67,9 +27,11 @@ describe Hypercacher, "with a Cache-Control header" do
       end
     end
 
-    request { get "/cache-control/private" }
+    before do
+      2.times { get "/cache-control/private" }
+    end
 
-    it_behaves_like "a cacheable response"
+    it_behaves_like "second response served from cache"
 
   end
 
@@ -82,9 +44,11 @@ describe Hypercacher, "with a Cache-Control header" do
       end
     end
 
-    request { get "/cache-control/public" }
+    before do
+      2.times { get "/cache-control/public" }
+    end
 
-    it_behaves_like "a cacheable response"
+    it_behaves_like "second response served from cache"
 
   end
 
@@ -97,9 +61,11 @@ describe Hypercacher, "with a Cache-Control header" do
       end
     end
 
-    request { get "/cache-control/must-revalidate" }
+    before do
+      2.times { get "/cache-control/must-revalidate" }
+    end
 
-    it_behaves_like "a response that needs revalidation"
+    it_behaves_like "second response needs revalidation"
 
   end
 
@@ -112,9 +78,11 @@ describe Hypercacher, "with a Cache-Control header" do
       end
     end
 
-    request { get "/cache-control/no-cache" }
+    before do
+      2.times { get "/cache-control/no-cache" }
+    end
 
-    it_behaves_like "a response that needs revalidation"
+    it_behaves_like "second response needs revalidation"
 
   end
 
@@ -127,38 +95,26 @@ describe Hypercacher, "with a Cache-Control header" do
       end
     end
 
-    request { get "/cache-control/max-age" }
-
     describe "a request made within max-age" do
       before do
-        make_request
+        get "/cache-control/max-age"
         jump 30
-        make_request
+        get "/cache-control/max-age"
       end
 
-      it { should be_ok }
-      it { should_not be_authoritative }
+      it_behaves_like "second response served from cache"
 
-      describe "the remote server" do
-        subject { app }
-        it { should have_received(1).request }
-      end
     end
 
     describe "a request made after max-age" do
       before do
-        make_request
+        get "/cache-control/max-age"
         jump 90
-        make_request
+        get "/cache-control/max-age"
       end
 
-      it { should be_ok }
-      it { should be_authoritative }
+      it_behaves_like "second response needs revalidation"
 
-      describe "the remote server" do
-        subject { app }
-        it { should have_received(2).requests }
-      end
     end
 
   end

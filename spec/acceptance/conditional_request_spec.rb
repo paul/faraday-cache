@@ -11,35 +11,23 @@ describe Hypercacher, "Conditional requests" do
     end
 
     before do
-      2.times {
-        get "/conditional-get/not-supported"
-      }
+      2.times { get "/conditional-get/not-supported" }
     end
+
+    it_behaves_like "second response served from cache"
 
     context "the first response" do
       subject { responses.first }
-      it { should_not be_from_cache }
       it { should_not have_header("ETag") }
       it { should_not have_header("Last-Modified") }
     end
 
-    context "the next request" do
+    context "the second request" do
       subject { requests.last }
 
       it { should_not have_header("If-None-Match") }
       it { should_not have_header("If-Not-Modified") }
     end
-
-    context "the response to the next request" do
-      subject { responses.last }
-      it { should be_from_cache }
-    end
-
-    context "the remote server" do
-      subject { app }
-      it { should have_received(1).request }
-    end
-
 
   end
 

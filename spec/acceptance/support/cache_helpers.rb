@@ -19,6 +19,41 @@ module CacheHelpers
     end
   end
 
+  shared_examples_for "second response served from cache" do
+    context "the first response" do
+      subject { responses.first }
+      it { should_not be_from_cache }
+    end
+
+    context "the second response" do
+      subject { responses.last }
+      it { should be_from_cache }
+    end
+
+    context "the remote server" do
+      subject { app }
+      it { should have_received(1).request }
+    end
+  end
+
+  shared_examples_for "second response needs revalidation" do
+    context "the first response" do
+      subject { responses.first }
+      it { should_not be_from_cache }
+    end
+
+    context "the second response" do
+      subject { responses.last }
+      it { should_not be_from_cache }
+    end
+
+    context "the remote server" do
+      subject { app }
+      it { should have_received(2).requests }
+    end
+  end
+
+
   RSpec.configure { |c| c.include self }
 
 end
