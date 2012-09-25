@@ -1,33 +1,25 @@
 module CacheHelpers
 
-  # Add #env_for to the available Rack::Test::Methods
-  extend Forwardable
-  def_delegators :current_session, :env_for, :process_request
-
-  def get(uri, params = {}, env = {}, &block)
-    env = env_for(uri, env.merge(:method => "GET", :params => params))
-
-    cached_response = @cache.fetch(env)
-
-    p cached_response
-    p cached_response.stale? if cached_response
-    if cached_response.nil? || cached_response.stale?
-      process_request(uri, env, &block)
-    else
-      @last_response = cached_response
+  RSpec::Matchers.define(:be_from_cache) do
+    match do |response|
+      !response.authoritative?
     end
-
-    @cache.store(last_request, last_response)
   end
 
-  RSpec::Matchers.define :be_present do
-    match do |obj|
-      !obj.nil?
+  RSpec::Matchers.define(:have_header) do |name|
+    match do |request_or_response|
+      case request_or_response
+      when Faraday::Response
+        !request_or_response.headers[name].nil?
+      when Sinatra::Request
+        !request_or_response[name].nil?
+      else
+        raise "I don't know how to find headers in #{request_or_response.inspect}"
+      end
     end
   end
 
   RSpec.configure { |c| c.include self }
-
 
 end
 

@@ -1,40 +1,21 @@
 module FaradayHelpers
 
-  module ExampleGroupMethods
-    def request(&block)
-      define_method(:make_request) do
-        @last_response = instance_eval &block
-      end
+  def conn
+    @conn ||= Faraday.new do |conn|
+      conn.request :hypercacher, Hypercacher.new
+      conn.adapter :rack, app
     end
-
   end
 
-  module ExampleMethods
-
-    def conn
-      @conn ||= Faraday.new do |conn|
-        conn.request :hypercacher, Hypercacher.new
-        conn.adapter :rack, app
-      end
-    end
-
-    def get(*args)
-      @last_response = conn.get(*args)
-    end
-
-    def response
-      @last_response ||= make_request
-    end
-
+  def get(*args)
+    resp = conn.get(*args)
+    responses << resp
   end
 
-  def self.included(mod)
-    mod.extend ExampleGroupMethods
-    mod.send :include, ExampleMethods
+  def responses
+    @responses ||= []
   end
 
-  RSpec.configure do |c|
-    c.include self
-  end
+  RSpec.configure { |c| c.include self }
 end
 

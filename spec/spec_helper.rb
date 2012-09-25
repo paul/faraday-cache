@@ -12,7 +12,7 @@ RSpec.configure do |config|
   config.include Delorean
 
   config.before :each do
-    app.reset_counts!
+    app.reset_requests!
   end
 
   config.after :each do

@@ -12,16 +12,16 @@ module AppHelpers
         response['Date'] = Time.now.httpdate
       end
 
-      def self.request_counts
-        @request_counts ||= Hash.new { |hsh,k| hsh[k] = 0 }
+      def self.requests
+        @requests ||= []
       end
 
-      def self.reset_counts!
-        @request_counts = nil
+      def self.reset_requests!
+        @requests = nil
       end
 
       after do
-        self.class.request_counts[request.path_info] += 1
+        self.class.requests << request
       end
 
     end
@@ -38,6 +38,10 @@ module AppHelpers
     self.class.app
   end
 
+  def requests
+    app.requests
+  end
+
   RSpec::Matchers.define(:have_received) do |count|
     chain(:request)  { @suffix = "request"  }
     chain(:requests) { @suffix = "requests" }
@@ -47,7 +51,7 @@ module AppHelpers
     end
 
     def actual_requests
-      app.request_counts.values.inject(&:+)
+      app.requests.size
     end
 
     match do
