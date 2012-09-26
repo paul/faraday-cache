@@ -3,6 +3,9 @@
 
 Faraday::Cache is an HTTP caching middleware for [Faraday]().
 
+[![Build Status](https://secure.travis-ci.org/paul/faraday-cache.png)](http://travis-ci.org/paul/faraday-cache)
+
+
 ## Usage
 
 ```ruby
