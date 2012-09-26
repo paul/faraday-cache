@@ -2,7 +2,7 @@ module FaradayHelpers
 
   def conn
     @conn ||= Faraday.new do |conn|
-      conn.request :hypercacher, Hypercacher.new
+      conn.request :cache
       conn.adapter :rack, app
     end
   end

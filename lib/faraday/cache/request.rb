@@ -1,4 +1,4 @@
-class Hypercacher
+class Faraday::Cache
   class Request < Faraday::Request
 
     CACHEABLE_METHODS = [:get, :head]

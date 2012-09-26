@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Hypercacher, "with a Vary header" do
+describe Faraday::Cache, "with a Vary header" do
 
   context "not present" do
 

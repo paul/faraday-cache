@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Hypercacher, "with a Cache-Control header" do
+describe Faraday::Cache, "with a Cache-Control header" do
 
   context "not present" do
     app do

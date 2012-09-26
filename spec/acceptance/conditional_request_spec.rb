@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Hypercacher, "Conditional requests" do
+describe Faraday::Cache, "Conditional requests" do
 
   context "not handled by the server" do
 

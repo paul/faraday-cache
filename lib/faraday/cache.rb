@@ -1,9 +1,13 @@
-require 'hypercacher/faraday_middleware'
-require 'hypercacher/request'
-require 'hypercacher/response'
-require 'hypercacher/memory_store'
+require 'faraday'
 
-class Hypercacher
+require 'faraday/cache/middleware'
+require 'faraday/cache/request'
+require 'faraday/cache/response'
+require 'faraday/cache/memory_store'
+
+class Faraday::Cache
+
+  VERSION = '0.0.1'
 
   Error              = Class.new StandardError
   UnsupportedAdapter = Class.new Error

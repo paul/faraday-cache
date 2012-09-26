@@ -1,4 +1,4 @@
-class Hypercacher
+class Faraday::Cache
   class AbstractStore
     def initialize(options = {})
     end

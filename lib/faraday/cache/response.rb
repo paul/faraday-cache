@@ -1,6 +1,6 @@
 require 'time'
 
-class Hypercacher
+class Faraday::Cache
   module Response
     # Monkeypatch Faraday::Response with caching utility methods
     Faraday::Response.send(:include, self)

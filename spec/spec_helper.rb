@@ -4,8 +4,8 @@ require 'awesome_print'
 require 'rack/test'
 require 'delorean'
 
-$LOAD_PATH << File.expand_path("../../lib/hypercacher", __FILE__)
-require "hypercacher"
+$LOAD_PATH << File.expand_path("../../lib/", __FILE__)
+require "faraday/cache"
 
 RSpec.configure do |config|
   config.include Rack::Test::Methods

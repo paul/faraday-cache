@@ -1,16 +1,16 @@
 require 'faraday'
 
-class Hypercacher
-  class FaradayMiddleware < Faraday::Middleware
-    Faraday.register_middleware :request, :hypercacher => self
+class Faraday::Cache
+  class Middleware < Faraday::Middleware
+    Faraday.register_middleware :request, :cache => self
 
-    def initialize(app, cache)
+    def initialize(app, cache_options = {})
       super(app)
-      @cache = cache
+      @cache = Faraday::Cache.new cache_options
     end
 
     def call(env)
-      request = Hypercacher::Request.from_env(env)
+      request = Faraday::Cache::Request.from_env(env)
       cached_response = @cache.fetch(request)
 
       # If there was nothing cached for this, make the request and store it
