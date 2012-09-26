@@ -12,6 +12,11 @@ class Hypercacher
       super
     end
 
+    def revalidate!(not_modified_response)
+      @authoritative = true
+      @revalidated = true
+    end
+
     def response_time
       @response_time || Time.now
     end
@@ -27,12 +32,16 @@ class Hypercacher
     end
 
     def stale?
-      needs_revalidation? || expired?
+      expired?
     end
 
     def authoritative?
       # Responses coming from Faraday are always authoritative
       true
+    end
+
+    def revalidated?
+      @revalidated
     end
 
     # Algorithm directly from RFC2616#13.2.3
@@ -88,8 +97,9 @@ class Hypercacher
   class CachedResponse < Faraday::Response
 
     def authoritative?
-      # Responses from the cache are never authoritative
-      false
+      # Responses from the cache are not authoritative, unless they have been
+      # revalidate!'d
+      @authoritative
     end
   end
 end

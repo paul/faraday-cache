@@ -8,11 +8,24 @@ module CacheHelpers
 
   RSpec::Matchers.define(:have_header) do |name|
     match do |request_or_response|
+      !headers(request_or_response)[name].nil?
+    end
+
+    failure_message_for_should do |request_or_response|
+      "Expected #{name.inspect} header to be in #{PP.pp(headers(request_or_response), "")}"
+    end
+
+    def headers(request_or_response)
       case request_or_response
       when Faraday::Response
-        !request_or_response.headers[name].nil?
+        request_or_response.headers
       when Sinatra::Request
-        !request_or_response[name].nil?
+        request_or_response.env.inject({}) do |h,(k,v)|
+          if k =~ /^HTTP_/
+            h[k.gsub(/^HTTP_/, '').split('_').map(&:capitalize).join('-')] = v
+          end
+          h
+        end
       else
         raise "I don't know how to find headers in #{request_or_response.inspect}"
       end

@@ -26,8 +26,14 @@ class Hypercacher
 
   end
 
-  def set_conditional_headers!(request)
+  def set_conditional_headers!(request, response)
+    if etag = response.headers['ETag']
+      request.headers['If-None-Match'] = etag
+    end
 
+    if last_modified = response.headers['Last-Modified']
+      request.headers['If-Modified-Since'] = last_modified
+    end
   end
 
 
