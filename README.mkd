@@ -1,59 +1,17 @@
 
-# Hypercacher
+# Faraday::Cache
 
-Hypercacher is a Ruby HTTP cache. It is primarily intended for use
-alongside the multitude of Ruby HTTP clients, but can also be used as a
-server or intermediate cache.
+Faraday::Cache is an HTTP caching middleware for [Faraday]().
 
 ## Usage
 
-*Note: this is how I intend this to work. It doesn't actually do this
-yet.*
+```ruby
+conn = Faraday.new do |conn|
+  conn.request :cache
+end
+```
 
-### Resourceful
+## TODO
 
-Resourceful includes support for Hypercacher out of the box.
-
-    @http = Resourceful::HttpAccessor.new
-    @http.cache_manager = Hypercacher.new
-    @http.resource("google.com").get
-
-### Net::HTTP
-
-    cache = Hypercacher.new
-
-    # make a request
-    request  = Net::HTTP::Get.new("/")
-    response = Net::HTTP.new("google.com").start { |http|
-                 http.request(request)
-               }
-
-    # store the response in the cache
-    cache.store(request, response)
-
-    # A new request, see if its already cached
-    request  = Net::HTTP::Get.new("/")
-    cached_response = cache.lookup(request)
-
-    # Check if there is one, and refresh it if its stale
-    if cached_response.nil? || cached_response.stale?
-      # Add If-None-Match and If-Modified-Since if available
-      conditional_headers = cache.conditional_headers_for(request)
-      conditional_headers.each_pair { |k,v| request[k] = v }
-
-      # Make the (conditional) request
-      response = Net::HTTP.new("google.com").start { |http|
-                   http.request(request)
-                 }
-      cache.store(request, response)
-    else
-      # Otherwise, the cached response is good enough, return it
-      response = cached_response
-    end
-
-### Faraday
-
-    conn = Faraday.new do |conn|
-      conn.request :hypercacher
-    end
+Support more cache store backends (Redis, PostgreSQL)
 
