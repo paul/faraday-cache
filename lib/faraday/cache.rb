@@ -3,6 +3,7 @@ require 'faraday'
 require 'faraday/cache/middleware'
 require 'faraday/cache/request'
 require 'faraday/cache/response'
+require 'faraday/cache/abstract_store'
 require 'faraday/cache/memory_store'
 
 class Faraday::Cache
