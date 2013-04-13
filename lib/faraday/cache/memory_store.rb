@@ -1,10 +1,4 @@
 class Faraday::Cache
-  class AbstractStore
-    def initialize(options = {})
-    end
-
-
-  end
 
   class MemoryStore < AbstractStore
 
